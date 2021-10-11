@@ -82,7 +82,6 @@ terms_by_type = {
       'stock',
       'subordinated',
       'trups',
-      'trust',
 
       'ser 1',
       'ser 2',
