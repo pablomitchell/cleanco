@@ -13,13 +13,13 @@ Daddy & Sons
 
 import functools
 import operator
-from collections import OrderedDict
 import re
 import unicodedata
 from .termdata import terms_by_type, terms_by_country
 from .non_nfkd_map import NON_NFKD_MAP
 
 tail_removal_rexp = re.compile(r"[^\.\w]+$", flags=re.UNICODE)
+punctuation = '!"#$%\'()*+,-./:;<=>?@[\\]^_`{|}~'
 
 
 def get_unique_terms():
@@ -34,19 +34,21 @@ def remove_accents(t):
     nfkd_form = unicodedata.normalize('NFKD', t.casefold())
     return ''.join(
         NON_NFKD_MAP[c]
-            if c in NON_NFKD_MAP
-        else c
+            if c in NON_NFKD_MAP else c
             for part in nfkd_form for c in part
             if unicodedata.category(part) != 'Mn'
         )
 
 
 def strip_punct(t):
-    return t.replace(".", "").replace(",", "").replace("-", "")
+    return t.translate(str.maketrans('', '', punctuation))
+
+
+def strip_suffix(t):
+    return t.replace('.com', '')
 
 
 def normalize_terms(terms):
-    "normalize terms"
     return (strip_punct(remove_accents(t)) for t in terms)
 
 
@@ -76,23 +78,18 @@ def prepare_terms():
 def basename(name, terms, suffix=True, prefix=False, middle=False, **kwargs):
     "return cleaned base version of the business name"
 
-    name = strip_tail(name)
+    # name = strip_tail(name)
+    # nparts = name.split()
+    # nname = normalized(name)
+    # nnparts = list(map(strip_punct, nname.split()))
+    # nnsize = len(nnparts)
+
+    name = strip_suffix(name)
+    name = strip_punct(name)
     nparts = name.split()
     nname = normalized(name)
-    nnparts = list(map(strip_punct, nname.split()))
+    nnparts = nname.split()
     nnsize = len(nnparts)
-
-    if suffix:
-        for termsize, termparts in terms:
-            if nnparts[-termsize:] == termparts:
-                del nnparts[-termsize:]
-                del nparts[-termsize:]
-
-    if prefix:
-        for termsize, termparts in terms:
-            if nnparts[:termsize] == termparts:
-                del nnparts[:termsize]
-                del nparts[:termsize]
 
     if middle:
         for termsize, termparts in terms:
@@ -109,7 +106,19 @@ def basename(name, terms, suffix=True, prefix=False, middle=False, **kwargs):
                     del nnparts[idx+1]
                     del nparts[idx+1]
 
+    if suffix:
+        for termsize, termparts in terms:
+            if nnparts[-termsize:] == termparts:
+                del nnparts[-termsize:]
+                del nparts[-termsize:]
 
-    return strip_tail(" ".join(nparts))
+    if prefix:
+        for termsize, termparts in terms:
+            if nnparts[:termsize] == termparts:
+                del nnparts[:termsize]
+                del nparts[:termsize]
+
+    # return strip_tail(" ".join(nparts))
+    return ' '.join(nparts)
 
 
