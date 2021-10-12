@@ -1,5 +1,10 @@
 terms_by_type = {
-   'Corporation': [
+    'Stop Words':  [
+        'a',
+        'an',
+        'the',
+    ],
+    'Corporation': [
       '& co',
       'ag',
       'co',
